@@ -6,21 +6,21 @@
 #include<graphics.h>
 #include<string.h>
 #include<dos.h>
-void passout(int len)
+void passout(int len,int retry)
 {
 	clrscr();
-	cout<<setw((80+strlen("Enter password: ")-len)/2)<<"Enter password: ";
+	cout<<"\n\n\n\n\n\n\n\n\n\n\n"<<setw(55)<<(retry==1?"Incorrect password, try again\n":"\n")<<setw((80+strlen("Enter password: ")-len)/2)<<"Enter password: ";
 	for(int i=len;i>0;i--)
 	{
 		cout<<"*";
 	}
 }
-int pass()
+int pass(int retry=1)
 {
 	clrscr();
 	char c,pass[20]="";
 	int timer,i;
-	passout(0);
+	passout(0,retry);
 	for (i=0;pass[i-1]!='\0'&&i<20;i++)
 	{
 		c=getch();
@@ -28,24 +28,25 @@ int pass()
 		{
 			pass[i-1]='\0';
 			i-=2;
-			passout(strlen(pass));
+			passout(strlen(pass),retry);
 		}
 		else if(c=='\r')
 			pass[i]='\0';
 		else
 		{
 			pass[i]=c;
-			passout(strlen(pass));
+			passout(strlen(pass),retry);
 		}
 	}
 	return strcmp(pass,"therealDoge");
 }
 void main()
 {
-	//int gd=DETECT,gm;
-	//initgraph(&gd,&gm,"C:\\TURBOC3\\BGI");
-	//setbkcolor(15);
-	//system("COLOR 08");
-	while(pass());
+	if(pass(0))
+		while(pass());
+	clrscr();
+	cout<<"\n\n\n\n\n\n\n\n\n\n\n\n"<<setw(51)<<"Successfully logged in";
+	delay(1000);
+	//printmenu();
 	getch();
 }
