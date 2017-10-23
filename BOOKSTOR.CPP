@@ -7,6 +7,7 @@
 #include<graphics.h>
 #include<string.h>
 #include<dos.h>
+#define print(i) cout<<setw((80+strlen(i))/2)<<i
 class Book
 {
 	long ID;
@@ -37,9 +38,9 @@ void passout(int len,int errcode=0)
 	clrscr();
 	cout<<"\n\n\n\n\n\n\n\n\n\n\n";
 	if(errcode==1)
-		cout<<setw(55)<<"\aIncorrect password, try again";
+		print("Incorrect password, try again");
 	else if(errcode==2)
-		cout<<setw(49)<<"\aInvalid character";
+		print("Invalid character");
 	cout<<endl<<setw((80+strlen("Enter password (esc to quit) : ")-len)/2)<<"Enter password (esc to quit) : ";
 	for(int i=len;i>0;i--)
 	{
@@ -79,14 +80,24 @@ int pass(int retry=1)
 				passout(strlen(pass));
 		}
 	}
-	return strcmp(pass,"therealDoge"); //password to be entered to proceed
+	return strcmp(pass,"   "); //password to be entered to proceed
 }
 int menu()
 {
 	clrscr();
+	cout<<"\n\n\n";
+	print("XD Book Shop")<<"\n\n\n";
+	print("Press 1 to add book to stock")<<"\n\n";
+	print("Press 2 to search for a book and make changes/add to cart")<<"\n\n";
+	print("Press 3 to view cart")<<"\n\n";
+	print("Press 4 to checkout")<<"\n\n";
+	print("Press 5 to view transactions")<<"\n\n";
+	print("Press 6 to change password")<<"\n\n";
+	print("Press Esc to quit")<<"\n\n"<<setw(40);
+	getch();
 	return 0;
 }
-Book findauth(char * str,int sno)
+Book findauth(char * str,int &sno)
 {
 	ifstream fin;
 	fin.open("booklist.dat",ios::binary);
@@ -98,17 +109,21 @@ Book findauth(char * str,int sno)
 			i++;
 	}
 	fin.close();
-	if(i==sno)
-		return b;
+	if(i!=sno)
+		sno=NULL;
+	return b;
 }
 void main()
 {
 	if(pass(0))
 		while(pass());
 	clrscr();
-	cout<<"\n\n\n\n\n\n\n\n\n\n\n\n"<<setw(51)<<"Successfully logged in";
+	cout<<"\n\n\n\n\n\n\n\n\n\n\n\n";
+	print("Successfully logged in");
 	delay(1000);
 	while(menu());
-	cout<<"\n\n\n\n\n\n\n\n\n\n\n\n"<<setw(51)<<"Successfully logged out";
-	getch();
+	clrscr();
+	cout<<"\n\n\n\n\n\n\n\n\n\n\n\n";
+	print("Successfully logged out");
+	delay(1000);
 }
