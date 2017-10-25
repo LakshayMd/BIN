@@ -10,7 +10,7 @@
 #define print(i) cout<<setw((80+strlen(i))/2)<<i
 class Book
 {
-	long ID;
+	int ID;
 	char name[70];
 	char author[30];
 	int tag[3];
@@ -22,7 +22,7 @@ class Book
 	{
 		return author;
 	}
-	long retid()
+	int retid()
 	{
 		return ID;
 	}
@@ -31,6 +31,14 @@ class Book
 		return name;
 	}
 };
+void Book::show()
+{
+	cout<<endl;
+	char strID[10];
+	int temp=ID;
+	for(int i=10;i>0;i--,temp/=10)
+		strID[i]=
+}
 class Transaction
 {
 	long ID;
@@ -61,10 +69,10 @@ void passout(int len,int errcode=0)
 int pass(int retry=1)
 {
 	clrscr();
-	char c,pass[20]="dog",code[20];
+	char c,pass[20]=" ",code[20];
 	passout(0,retry);
 	retry=0;
-	for (int i=0;pass[i-1]!='\0'&&i<20;i++)
+	for (int i=0;pass[i==0?i:i-1]!='\0'&&i<20;i++)
 	{
 		c=getch();
 		switch(c)
@@ -111,8 +119,9 @@ int findauth(Book b[],char * str,int start=0)
 }
 void compsearchout(Book b[],char str[]="",int range=0,int select=-1)
 {
+	clrscr();
 	cout<<'\n';
-	print("Search:")<<'\n';
+	print(" Search:")<<'\n';
 	print(str)<<"\n\n";
 	for(int i=0;i<=range;i++)
 		{}//b[i].show();
