@@ -30,7 +30,7 @@ class Book
 	{
 		return name;
 	}
-	int quantity()
+	int retquan()
 	{
 		return quantity;
 	}
@@ -115,7 +115,7 @@ int findauth(Book b[],char * str,int start=0)
 	int i=0;
 	while(fin.read((char *)&b[(i-start)%10],sizeof(b[i]))&&i<(start+10))
 	{
-		if(b[i].retid()!=-1&&strstr(b[i].retauth(),str)!=NULL)
+		if(b[i].retquan()!=-1&&strstr(b[i].retauth(),str)!=NULL)
 			i++;
 	}
 	fin.close();
