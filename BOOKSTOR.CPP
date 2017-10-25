@@ -30,6 +30,10 @@ class Book
 	{
 		return name;
 	}
+	int retquan()
+	{
+		return quantity;
+	}
 };
 void Book::show()
 {
@@ -111,7 +115,7 @@ int findauth(Book b[],char * str,int start=0)
 	int i=0;
 	while(fin.read((char *)&b[(i-start)%10],sizeof(b[i]))&&i<(start+10))
 	{
-		if(strstr(b[i].retauth(),str)!=NULL)
+		if(b[i].retquan()!=-1&&strstr(b[i].retauth(),str)!=NULL)
 			i++;
 	}
 	fin.close();

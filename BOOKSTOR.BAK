@@ -10,7 +10,7 @@
 #define print(i) cout<<setw((80+strlen(i))/2)<<i
 class Book
 {
-	long ID;
+	int ID;
 	char name[70];
 	char author[30];
 	int tag[3];
@@ -22,7 +22,7 @@ class Book
 	{
 		return author;
 	}
-	long retid()
+	int retid()
 	{
 		return ID;
 	}
@@ -30,10 +30,18 @@ class Book
 	{
 		return name;
 	}
+	int quantity()
+	{
+		return quantity;
+	}
 };
 void Book::show()
 {
 	cout<<endl;
+	char strID[10];
+	int temp=ID;
+	for(int i=10;i>0;i--,temp/=10)
+		strID[i]=
 }
 class Transaction
 {
@@ -107,7 +115,7 @@ int findauth(Book b[],char * str,int start=0)
 	int i=0;
 	while(fin.read((char *)&b[(i-start)%10],sizeof(b[i]))&&i<(start+10))
 	{
-		if(strstr(b[i].retauth(),str)!=NULL)
+		if(b[i].retid()!=-1&&strstr(b[i].retauth(),str)!=NULL)
 			i++;
 	}
 	fin.close();
