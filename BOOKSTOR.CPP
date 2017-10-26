@@ -1,4 +1,5 @@
 #include<fstream.h>
+#include<ctype.h>
 #include<process.h>
 #include<iomanip.h>
 #include<stdio.h>
@@ -8,21 +9,42 @@
 #include<string.h>
 #include<dos.h>
 #define print(i) cout<<setw((80+strlen(i))/2)<<i
+#define prINT(i) cout<<setw((80+intlen(i))/2)<<i
+int intlen(long n)
+{
+	for(int i=0;n!=0;i++,n/=10);
+	return i;
+}
+class tag
+{
+	int ID;
+	char name[20];
+	public:
+	int retID()
+	{
+		return ID;
+	}
+	char * retname()
+	{
+		return name;
+	}
+};
 class Book
 {
 	int ID;
-	char name[70];
+	char name[50];
 	char author[30];
 	int tag[3];
 	int quantity;
-	float price;
+	int price;
 	public:
 	void show();
+	void add();
 	char * retauth()
 	{
 		return author;
 	}
-	int retid()
+	int retID()
 	{
 		return ID;
 	}
@@ -35,13 +57,148 @@ class Book
 		return quantity;
 	}
 };
+char * taglookup(int intag)
+{
+	ifstream fin;
+	tag t;
+	fin.open("tags.dat",ios::binary);
+	char strtag[60]="";
+	while(fin.read((char *)&t,sizeof(t))&&intag!=0)
+		if(intag==t.retID())
+		{
+			strcpy(strtag,t.retname());
+			break;
+		}
+	return strtag;
+}
+void Book::add()
+{
+	int select=1;
+	char c=0,tag1[20],tag2[20],tag3[20];
+	ID=NULL;
+	strcpy(name,"");
+	strcpy(author,"");
+	tag[0]=0;
+	tag[1]=0;
+	tag[2]=0;
+	quantity=0;
+	price=0;
+	while(c!=27)
+	{
+		clrscr();
+		cout<<"\n";
+		print("Add book")<<"\n\n\n";
+		print(" Book name:")<<endl;
+		print(name)<<"\n\n";
+		print(" Author:")<<endl;
+		print(author)<<"\n\n";
+		print(" Tags:")<<endl;
+		print(taglookup(tag[0]))<<endl;
+		print(taglookup(tag[1]))<<endl;
+		print(taglookup(tag[2]))<<"\n\n";
+		print(" Quantity:")<<endl;
+		prINT(quantity)<<"\n\n";
+		print(" Price:")<<endl;
+		prINT(price)<<"\n\n\n";
+		print("Done");
+		gotoxy(15,select<4?3*(select+1):select==4?13:select*3-1);
+		cout<<(char)26;
+		gotoxy(80,25);
+		/*if(select!=0)
+		{
+			int gd=DETECT,gm;
+			initgraph(&gd,&gm,"C:\\TURBOC3\\BGI");
+			int x=(int)getmaxx(),y=(int)getmaxy();
+			rectangle(x/16,(2+3*select)*y/22,15*x/16,(5+3*select)*y/22);
+			c=getch();
+			closegraph();
+		}
+		else*/
+			c=getch();
+		if(c=='\0')
+		{
+			c=getch();
+			switch(c)
+			{
+				case 72:
+					if(select!=1)
+						select--;
+					else
+						select=8;
+					break;
+				case 80:
+					if(select!=8)
+						select++;
+					else
+						select=1;
+			}
+		}
+		else
+			switch(c)
+			{
+				case '\r':
+					select++;
+					break;
+				case 27:
+					break;
+				default:
+					switch(select)
+					{
+						case 1:
+							if(c=='\b')
+							{
+								if(name[0]!='\0')
+									name[strlen(name)-1]='\0';
+							}
+							else if(strlen(name)<50)
+							{
+								name[strlen(name)+1]='\0';
+								name[strlen(name)]=c;
+							}
+							break;
+						case 2:
+							if(c=='\b')
+							{
+								if(author[0]!='\0')
+									author[strlen(author)-1]='\0';
+							}
+							else if(strlen(author)<30)
+							{
+								author[strlen(author)+1]='\0';
+								author[strlen(author)]=c;
+							}
+							break;
+						case 3:
+							break;
+						case 4:
+							break;
+						case 5:
+							break;
+						case 6:
+							if(isdigit(c))
+								quantity=10*quantity+c-48;
+							if(c==8)
+								quantity/=10;
+							break;
+						case 7:
+							if(isdigit(c))
+								price=10*price+c-48;
+							if(c==8)
+								price/=10;
+					}
+			}
+	}
+}
 void Book::show()
 {
 	cout<<endl;
-	char strID[10];
-	int temp=ID;
-	for(int i=10;i>0;i--,temp/=10)
-		strID[i]=
+	char strID[10],strquan[2];
+	int temp=ID,quan=quantity;
+	for(int i=9;i>=0;i--,temp/=10)
+		strID[i]=temp%10;
+	for(i=1;i>=0;i--,quan/=10)
+		strquan[i]=quan%10;
+	print(strcat(strcat("#",strID),(quantity==0?"                                 Availibility: out of stock":strcat(strcat("                                 Availibility:     ",strquan)," items"))));
 }
 class Transaction
 {
@@ -50,11 +207,6 @@ class Transaction
 	int quantity[10];
 	int price[10];
 	int total;
-};
-class tag
-{
-	int ID;
-	char name[20];
 };
 void passout(int len,int errcode=0)
 {	 //errcode=0 for no error, 1 for incorrect pass, 2 for invalid char
@@ -121,15 +273,6 @@ int findauth(Book b[],char * str,int start=0)
 	fin.close();
 	return i-start;
 }
-void compsearchout(Book b[],char str[]="",int range=0,int select=-1)
-{
-	clrscr();
-	cout<<'\n';
-	print(" Search:")<<'\n';
-	print(str)<<"\n\n";
-	for(int i=0;i<=range;i++)
-		{}//b[i].show();
-}
 void searchauth(int type=0)
 {
 	clrscr();
@@ -137,7 +280,11 @@ void searchauth(int type=0)
 	char c,search[30]="";
 	Book result[10];
 	if(type==1)
-		compsearchout(result);
+	{
+		clrscr();
+		cout<<'\n';
+		print(" Search:");
+	}
 	for (int i=0;search[i-1]!='\0'&&i<20;i++)
 	{
 		c=getch();
@@ -151,16 +298,22 @@ void searchauth(int type=0)
 				if(!strcmp(search,""))
 					range=findauth(result,search,start);
 				if(type==1)
-					compsearchout(result,search,range,select);
+				{
+					clrscr();
+					cout<<'\n';
+					print(" Search:")<<'\n';
+					print(search)<<"\n\n";
+					for(int i=0;i<6&&i<range;i++)
+						result[i].show();
+				}
 				else {}
 					//specsearch(3,search,result);
 				break;
 			case '\r':
 				search[i]='\0';
 				break;
-			case '\0'://so that arrow keys etc dont create glitches
+			case '\0':
 				getch();
-				//passout(strlen(pass),2);
 				i--;
 				break;
 			default:
@@ -168,7 +321,14 @@ void searchauth(int type=0)
 				if(!strcmp(search,""))
 					range=findauth(result,search,start);
 				if(type==1)
-					compsearchout(result,search,range,select);
+				{
+					clrscr();
+					cout<<'\n';
+					print(" Search:")<<'\n';
+					print(search)<<"\n\n";
+					for(int i=0;i<6&&i<range;i++)
+						result[i].show();
+				}
 				else {}
 					//specsearch(3,search,result);
 		}
@@ -225,6 +385,11 @@ int menu()
 			getch();
 			return 1;
 		case '1':
+			ofstream fout;
+			fout.open("booklist.dat",ios::binary);
+			Book b;
+			b.add();
+			fout.write((char *)&b,sizeof(b));
 			return 1;
 		case '2':
 			search();
