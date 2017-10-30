@@ -15,20 +15,93 @@ int intlen(long n)
 	for(int i=0;n!=0;i++,n/=10);
 	return i;
 }
-class tag
+struct tag
 {
 	int ID;
 	char name[20];
-	public:
-	int retID()
-	{
-		return ID;
-	}
-	char * retname()
-	{
-		return name;
-	}
 };
+int entag(char c, int a, int b)
+{
+	int j=0,select=0;
+	char str[20]=" ";
+	str[0]=c;
+	tag t[10];
+	for(int i=1;(i==0?1:str[i-1])!='\0';i<20?(i++):(i=20))
+	{
+		clrscr();
+		cout<<endl;
+		print(" Enter tag:")<<endl;
+		print(str)<<"\n\n";
+		ifstream fin;
+		fin.open("tags.dat",ios::binary);
+		while(fin.read((char *)&t[j],sizeof(t[j]))&&j<10)
+		{
+			if(strstr(t[j].name,str)!=NULL&&t[j].ID!=a&&t[j].ID!=b)
+			{
+				cout<<endl;
+				print(t[j].name)<<endl;
+				j++;
+			}
+		}
+		fin.close();
+		c=getch();
+		switch(c)
+		{
+			case 27:
+				return 0;
+			case '\b':
+				if(i!=0)
+				{
+					str[i-1]='\0';
+					i--;
+				}
+				i--;
+				break;
+			case '\r':
+				str[i]='\0';
+				break;
+			case '\0':
+				c=getch();
+				i--;
+				if(c==72)
+					if(select>0)
+						select--;
+					else
+						select=j;
+				else
+					if(c==80)
+						if(select<j)
+							select++;
+						else
+							select=0;
+				break;
+			default:
+				select=0;
+				str[i]=c;
+		}
+	}
+	if(select==0)
+	{
+		fstream f;
+		f.open("tags.dat",ios::binary|ios::in|ios::out);
+		i=0;
+		while(f.read((char *)&t[0],sizeof(t[0])))
+		{
+			if(!strcmpi(t[0].name,str))
+			{
+				f.close();
+				return t[0].ID;
+			}
+		}
+		t[0].ID=(f.tellg()/sizeof(t[0])+1);
+		strcpy(t[0].name,str);
+		f.write((char *)&t[0],sizeof(t[0]));
+		f.close();
+		return t[0].ID;
+	}
+	else
+		return t[select-1].ID;
+}
 class Book
 {
 	int ID;
@@ -64,16 +137,16 @@ char * taglookup(int intag)
 	fin.open("tags.dat",ios::binary);
 	char strtag[60]="";
 	while(fin.read((char *)&t,sizeof(t))&&intag!=0)
-		if(intag==t.retID())
+		if(intag==t.ID)
 		{
-			strcpy(strtag,t.retname());
+			strcpy(strtag,t.name);
 			break;
 		}
 	return strtag;
 }
 void Book::add()
 {
-	int select=1;
+	int select=1,mode=1; //mode=1 for add, 0 for modify
 	char c=0,tag1[20],tag2[20],tag3[20];
 	ID=NULL;
 	strcpy(name,"");
@@ -104,16 +177,6 @@ void Book::add()
 		gotoxy(15,select<4?3*(select+1):select==4?13:select*3-1);
 		cout<<(char)26;
 		gotoxy(80,25);
-		/*if(select!=0)
-		{
-			int gd=DETECT,gm;
-			initgraph(&gd,&gm,"C:\\TURBOC3\\BGI");
-			int x=(int)getmaxx(),y=(int)getmaxy();
-			rectangle(x/16,(2+3*select)*y/22,15*x/16,(5+3*select)*y/22);
-			c=getch();
-			closegraph();
-		}
-		else*/
 			c=getch();
 		if(c=='\0')
 		{
@@ -169,10 +232,14 @@ void Book::add()
 							}
 							break;
 						case 3:
+							if(c!='\b')
+							tag[0]=entag(c,tag[1],tag[2]);
 							break;
 						case 4:
+							tag[1]=entag(c,tag[0],tag[2]);
 							break;
 						case 5:
+							tag[2]=entag(c,tag[0],tag[1]);
 							break;
 						case 6:
 							if(isdigit(c))
@@ -225,10 +292,10 @@ void passout(int len,int errcode=0)
 int pass(int retry=1)
 {
 	clrscr();
-	char c,pass[20]=" ",code[20];
+	char c,pass[20]="",code[20];
 	passout(0,retry);
 	retry=0;
-	for (int i=0;pass[i==0?i:i-1]!='\0'&&i<20;i++)
+	for (int i=0;(i==0?1:pass[i-1])!='\0'&&i<20;i++)
 	{
 		c=getch();
 		switch(c)
@@ -285,7 +352,7 @@ void searchauth(int type=0)
 		cout<<'\n';
 		print(" Search:");
 	}
-	for (int i=0;search[i-1]!='\0'&&i<20;i++)
+	for (int i=0;(i==0?1:search[i-1])!='\0'&&i<20;i++)
 	{
 		c=getch();
 		switch(c)
@@ -293,10 +360,12 @@ void searchauth(int type=0)
 			case 27:
 				break;
 			case '\b':
-				search[i-1]='\0';
-				i-=2;
-				if(!strcmp(search,""))
+				if(i!=0)
+				{
+					search[i-1]='\0';
+					i-=2;
 					range=findauth(result,search,start);
+				}
 				if(type==1)
 				{
 					clrscr();
@@ -363,7 +432,6 @@ void search()
 			break;
 		case '\0':
 			getch();
-		//default:
 	}
 }
 int menu()
@@ -389,7 +457,8 @@ int menu()
 			fout.open("booklist.dat",ios::binary);
 			Book b;
 			b.add();
-			fout.write((char *)&b,sizeof(b));
+			if(b.retID()==0)
+				fout.write((char *)&b,sizeof(b));
 			return 1;
 		case '2':
 			search();
