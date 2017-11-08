@@ -25,8 +25,8 @@ class Book
 	int price;
 	public:
 	void show();
-	void add();
-	void assign(int);
+	void add(long);
+	void assign(long);
 	char * retauth()
 	{
 		return author;
@@ -56,25 +56,25 @@ class Book
 		return tag[2];
 	}
 };
-void Book::assign(int size)
+void Book::assign(long val)
 {
-	fstream fin;
-	fin.open("booklist.dat",ios::binary);
-	fin.seekg(0,ios::end);
-	ID=fin.tellg()/size+1;
+	ID=val;
 }
-void Book::add()
+void Book::add(long mode=1)
 {
-	int select=1,mode=1; //mode=1 for add, 0 for modify
-	char c=0,tag1[20],tag2[20],tag3[20];
-	ID=NULL;
-	strcpy(name,"");
-	strcpy(author,"");
-	strcpy(tag[0],"");
-	strcpy(tag[1],"");
-	strcpy(tag[2],"");
-	quantity=0;
-	price=0;
+	int select=1; //mode=1 for add, 0 for modify
+	char c=0;
+	if(mode==1)
+	{
+		ID=NULL;
+		strcpy(name,"");
+		strcpy(author,"");
+		strcpy(tag[0],"");
+		strcpy(tag[1],"");
+		strcpy(tag[2],"");
+		quantity=0;
+		price=0;
+	}
 	while(c!=27)
 	{
 		clrscr();
@@ -95,7 +95,7 @@ void Book::add()
 		print("Done");
 		gotoxy(15,select<4?3*(select+1):select==4?13:select*3-1);
 		cout<<(char)26;
-		gotoxy(80,25);
+		gotoxy(0,25);
 			c=getch();
 		if(c=='\0')
 		{
@@ -123,8 +123,26 @@ void Book::add()
 						select++;
 					else
 					{
-						ID=0;
-						return;
+						if(!strcmp(name,""))
+						{
+							print("Enter a name");
+							getch();
+						}
+						else if(!strcmp(author,""))
+						{
+							print("Enter an author");
+							getch();
+						}
+						else if(price==0)
+						{
+							print("Enter a price");
+							getch();
+						}
+						else
+						{
+							ID=0;
+							return;
+						}
 					}
 					break;
 				case 27:
@@ -210,15 +228,9 @@ void Book::add()
 void Book::show()
 {
 	cout<<endl;
-	char strID[10],strquan[2];
-	int temp=ID,quan=quantity;
-	for(int i=9;i>=0;i--,temp/=10)
-		strID[i]=temp%10;
-	for(i=1;i>=0;i--,quan/=10)
-		strquan[i]=quan%10;
-	cout<<"#"<<strID<<"                                 Availibility:     "<<quan<<" items";
-	cout<<(strcat("     ",name))<<endl;
-	cout<<(strcat("     ",author))<<endl;
+	cout<<"     #"<<ID<<"                                             Availibility: "<<quantity<<" items"<<endl;
+	cout<<"     "<<name<<endl;
+	cout<<"     by "<<author<<endl;
 	cout<<"     Price: "<<price;
 }
 /*int enterdata(char c, char * a="", char * b="")
@@ -364,19 +376,27 @@ int pass(int retry=1)
 	fin.close();
 	return strcmp(pass,code); //password to be entered to proceed
 }
-void searchauth(int type=0)
+void searchauth()
 {
 	clrscr();
-	int start=0,range=0,select=-1;
+	int start=0,range=0;
 	char c,search[30]="";
-	Book result[10];
-	if(type==1)
+	Book result[5];
+	clrscr();
+	cout<<'\n';
+	print(" Search:")<<"\n\n";
+	ifstream fin;
+	fin.open("booklist.dat",ios::binary);
+	int j=0;
+	while(fin.read((char *)&result[(j-start)%5],sizeof(result[j]))&&j<(start+5))
 	{
-		clrscr();
-		cout<<'\n';
-		print(" Search:");
+		j++;
 	}
-	for(int i=0;(i==0?1:search[i-1])!='\0'&&i<30;i++)
+	fin.close();
+	range=j-start;
+	for(int i=0;i<5;i++)
+		result[i].show();
+	for(i=0;(i==0?1:search[i-1])!='\0'&&i<30;i++)
 	{
 		c=getch();
 		switch(c)
@@ -394,25 +414,16 @@ void searchauth(int type=0)
 					ifstream fin;
 					fin.open("booklist.dat",ios::binary);
 					int j=0;
-					while(fin.read((char *)&result[(j-start)%10],sizeof(result[j]))&&j<(start+10))
+					while(fin.read((char *)&result[(j-start)%5],sizeof(result[j]))&&j<(start+5))
 					{
-						if(result[j].retquan()!=-1&&strstr(result[j].retauth(),search)!=NULL)
-						i++;
+						if(result[(j-start)%5].retquan()!=-1&&strstr(result[(j-start)%5].retauth(),search)!=NULL)
+							j++;
 					}
 					fin.close();
 					range=j-start;
 				}
-				if(type==1)
-				{
-					clrscr();
-					cout<<'\n';
-					print(" Search:")<<'\n';
-					print(search)<<"\n\n";
-					for(int i=0;i<6&&i<range;i++)
-						result[i].show();
-				}
-				else {}
-					//specsearch(3,search,result);
+				else
+					range=0;
 				break;
 			case '\0':
 				getch();
@@ -420,31 +431,24 @@ void searchauth(int type=0)
 				break;
 			default:
 				search[i]=c;
-				if(!strcmp(search,""))
+				search[i+1]=0;
+				ifstream fin;
+				fin.open("booklist.dat",ios::binary);
+				int j=0;
+				while(fin.read((char *)&result[(j-start)%5],sizeof(result[j]))&&j<(start+5))
 				{
-					ifstream fin;
-					fin.open("booklist.dat",ios::binary);
-					int j=0;
-					while(fin.read((char *)&result[(j-start)%10],sizeof(result[j]))&&j<(start+10))
-					{
-						if(result[j].retquan()!=-1&&strstr(result[j].retauth(),search)!=NULL)
-						i++;
-					}
-					fin.close();
-					range=j-start;
+					if(result[(j-start)%5].retquan()!=-1&&strstr(result[(j-start)%5].retauth(),search)!=NULL)
+					j++;
 				}
-				if(type==1)
-				{
-					clrscr();
-					cout<<'\n';
-					print(" Search:")<<'\n';
-					print(search)<<"\n\n";
-					for(int i=0;i<6&&i<range;i++)
-						result[i].show();
-				}
-				else {}
-					//specsearch(3,search,result);
+				fin.close();
+				range=j-start;
 		}
+		clrscr();
+		cout<<'\n';
+		print(" Search:")<<'\n';
+		print(search)<<"\n";
+		for(int i=0;i<6&&i<range;i++)
+			result[i].show();
 	}
 }
 void search()
@@ -466,7 +470,7 @@ void search()
 		case '2':
 			break;
 		case '3':
-			searchauth(1);
+			searchauth();
 			break;
 		case '4':
 			break;
@@ -503,7 +507,8 @@ int menu()
 			b.add();
 			if(b.retID()==0)
 			{
-				b.assign(sizeof(b));
+				fout.seekp(0,ios::end);
+				b.assign(fout.tellp()/sizeof(b)+1);
 				fout.write((char *)&b,sizeof(b));
 			}
 			return 1;
