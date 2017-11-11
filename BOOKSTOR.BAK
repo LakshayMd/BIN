@@ -343,7 +343,7 @@ void passout(int len,int code=0)
 		print("Invalid character");
 	else if(code==3)
 		print("This action cannot be undone. Confirm deletion?");
-	cout<<endl<<setw((80+strlen("Enter password (esc to quit) : ")-len)/2)<<"Enter password (esc to quit) : ";
+	cout<<endl<<setw((80+strlen("Enter password (Esc to cancel) : ")-len)/2)<<"Enter password (esc to quit) : ";
 	for(int i=len;i>0;i--)
 	{
 		cout<<"*";
@@ -361,8 +361,7 @@ int pass(int code=1)
 		switch(c)
 		{
 			case 27:
-				exit(0);
-				break;
+				return -1;
 			case '\b':
 				pass[i-1]='\0';
 				i-=2;
@@ -385,7 +384,7 @@ int pass(int code=1)
 	fin.open("encryp.txt");
 	fin.getline(corr,20);
 	fin.close();
-	return strcmp(pass,corr); //password to be entered to proceed
+	return strcmp(pass,corr)==0?0:1;
 }
 void bookmenu(Book b)
 {
@@ -421,14 +420,20 @@ void bookmenu(Book b)
 			break;
 		case '3':
 			clrscr();
-			if(!pass(3))
+			int x=pass(3);
+			while(x!=-1)
 			{
-				b.del();
-				fstream fout;
-				fout.open("booklist.dat",ios::binary|ios::out|ios::in);
-				fout.seekp((b.retID()-1)*sizeof(b));
-				fout.write((char *)&b,sizeof(b));
-				fout.close();
+				if(!x)
+				{
+					b.del();
+					fstream fout;
+					fout.open("booklist.dat",ios::binary|ios::out|ios::in);
+					fout.seekp((b.retID()-1)*sizeof(b));
+					fout.write((char *)&b,sizeof(b));
+					fout.close();
+					break;
+				}
+				x=pass(1);
 			}
 			break;
 	}
@@ -611,8 +616,16 @@ int menu()
 }
 void main()
 {
-	if(pass(0))
-		while(pass());
+	int x=pass(0);
+	if(x==1)
+		while(x)
+		{
+			x=pass();
+			if(x==-1)
+				exit(0);
+		}
+	else if(x==-1)
+		exit(0);
 	clrscr();
 	cout<<"\n\n\n\n\n\n\n\n\n\n\n\n";
 	print("Successfully logged in");
