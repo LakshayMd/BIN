@@ -25,8 +25,15 @@ class Book
 	int price;
 	public:
 	void show();
-	void add(long);
-	void assign(long);
+	void add(int);
+	void assign(long val)
+	{
+		ID=val;
+	}
+	void del()
+	{
+		quantity=-1;
+	}
 	char * retauth()
 	{
 		return author;
@@ -56,17 +63,13 @@ class Book
 		return tag[2];
 	}
 };
-void Book::assign(long val)
-{
-	ID=val;
-}
-void Book::add(long mode=1)
+void Book::add(int mode=1)
 {
 	int select=1; //mode=1 for add, 0 for modify
 	char c=0;
 	if(mode==1)
 	{
-		ID=NULL;
+		ID=0;
 		strcpy(name,"");
 		strcpy(author,"");
 		strcpy(tag[0],"");
@@ -95,7 +98,7 @@ void Book::add(long mode=1)
 		print("Done");
 		gotoxy(15,select<4?3*(select+1):select==4?13:select*3-1);
 		cout<<(char)26;
-		gotoxy(0,25);
+		gotoxy(1,25);
 			c=getch();
 		if(c=='\0')
 		{
@@ -140,12 +143,12 @@ void Book::add(long mode=1)
 						}
 						else
 						{
-							ID=0;
 							return;
 						}
 					}
 					break;
 				case 27:
+					ID=-1;
 					break;
 				default:
 					switch(select)
@@ -231,7 +234,13 @@ void Book::show()
 	cout<<"     #"<<ID<<"                                             Availibility: "<<quantity<<" items"<<endl;
 	cout<<"     "<<name<<endl;
 	cout<<"     by "<<author<<endl;
-	cout<<"     Price: "<<price;
+	cout<<"     Tags: ";
+	cout<<tag[0];
+	if(strcmp(tag[1],""))
+		cout<<", "<<tag[1];
+	if(strcmp(tag[2],""))
+		cout<<", "<<tag[2];
+	cout<<endl<<"     Price: "<<price;
 }
 /*int enterdata(char c, char * a="", char * b="")
 {
@@ -324,26 +333,28 @@ class Transaction
 	int price[10];
 	int total;
 };
-void passout(int len,int errcode=0)
-{	 //errcode=0 for no error, 1 for incorrect pass, 2 for invalid char
+void passout(int len,int code=0)
+{	 //code=0 for no error, 1 for incorrect pass, 2 for invalid char
 	clrscr();
 	cout<<"\n\n\n\n\n\n\n\n\n\n\n";
-	if(errcode==1)
+	if(code==1)
 		print("Incorrect password, try again");
-	else if(errcode==2)
+	else if(code==2)
 		print("Invalid character");
+	else if(code==3)
+		print("This action cannot be undone. Confirm deletion?");
 	cout<<endl<<setw((80+strlen("Enter password (esc to quit) : ")-len)/2)<<"Enter password (esc to quit) : ";
 	for(int i=len;i>0;i--)
 	{
 		cout<<"*";
 	}
 }
-int pass(int retry=1)
+int pass(int code=1)
 {
 	clrscr();
-	char c,pass[20]="",code[20];
-	passout(0,retry);
-	retry=0;
+	char c,pass[20]="",corr[20];
+	passout(0,code);
+	code=0;
 	for (int i=0;(i==0?1:pass[i-1])!='\0'&&i<20;i++)
 	{
 		c=getch();
@@ -360,7 +371,7 @@ int pass(int retry=1)
 			case '\r':
 				pass[i]='\0';
 				break;
-			case '\0'://so that arrow keys etc dont create glitches
+			case '\0':
 				getch();
 				passout(strlen(pass),2);
 				i--;
@@ -372,31 +383,78 @@ int pass(int retry=1)
 	}
 	ifstream fin;
 	fin.open("encryp.txt");
-	fin.getline(code,20);
+	fin.getline(corr,20);
 	fin.close();
-	return strcmp(pass,code); //password to be entered to proceed
+	return strcmp(pass,corr); //password to be entered to proceed
 }
-void searchauth()
+void bookmenu(Book b)
 {
 	clrscr();
-	int start=0,range=0;
+	cout<<"\n\n\n";
+	b.show();
+	cout<<"\n\n";
+	print("Perform an action")<<"\n\n";
+	print("Press 1           to add to cart")<<"\n\n";
+	print("Press 2                  to edit")<<"\n\n";
+	print("Press 3                to delete")<<"\n\n";
+	print("Press Esc             to go back")<<"\n\n";
+	char c=getch();
+	switch(c)
+	{
+		case 27:
+			return;
+		case 0:
+			getch();
+			break;
+		case '1':
+			break;
+		case '2':
+			b.add(0);
+			if(b.retID()!=-1)
+			{
+				fstream fout;
+				fout.open("booklist.dat",ios::binary|ios::out|ios::in);
+				fout.seekp((b.retID()-1)*sizeof(b));
+				fout.write((char *)&b,sizeof(b));
+				fout.close();
+			}
+			break;
+		case '3':
+			clrscr();
+			if(!pass(3))
+			{
+				b.del();
+				fstream fout;
+				fout.open("booklist.dat",ios::binary|ios::out|ios::in);
+				fout.seekp((b.retID()-1)*sizeof(b));
+				fout.write((char *)&b,sizeof(b));
+				fout.close();
+			}
+			break;
+	}
+}
+void searchscr(int type)
+{
+	clrscr();
+	int start=0,range=0,select=0;
 	char c,search[30]="";
-	Book result[5];
+	Book result[4];
 	clrscr();
 	cout<<'\n';
 	print(" Search:")<<"\n\n";
 	ifstream fin;
 	fin.open("booklist.dat",ios::binary);
 	int j=0;
-	while(fin.read((char *)&result[(j-start)%5],sizeof(result[j]))&&j<(start+5))
+	while(fin.read((char *)&result[j%4],sizeof(result[j]))&&j<4)
 	{
-		j++;
+		if(result[j%4].retquan()!=-1)
+			j++;
 	}
 	fin.close();
-	range=j-start;
-	for(int i=0;i<5;i++)
+	range=j;
+	for(int i=0;i<range;i++)
 		result[i].show();
-	for(i=0;(i==0?1:search[i-1])!='\0'&&i<30;i++)
+	for(i=0;(i==0?1:search[i-1])!='\0'&&i<50;i<50?i++:(i=50))
 	{
 		c=getch();
 		switch(c)
@@ -404,9 +462,11 @@ void searchauth()
 			case 27:
 				return;
 			case '\r':
-				search[i]='\0';
+				if(select!=0)
+					bookmenu(result[select-1]);
 				break;
 			case '\b':
+				select=0;
 				if(i!=0)
 				{
 					search[i-1]='\0';
@@ -414,31 +474,48 @@ void searchauth()
 					ifstream fin;
 					fin.open("booklist.dat",ios::binary);
 					int j=0;
-					while(fin.read((char *)&result[(j-start)%5],sizeof(result[j]))&&j<(start+5))
+					while(fin.read((char *)&result[(j-start)%4],sizeof(result[j]))&&j<(start+4))
 					{
-						if(result[(j-start)%5].retquan()!=-1&&strstr(result[(j-start)%5].retauth(),search)!=NULL)
-							j++;
+						if(type==1||type==2)
+							if(result[(j-start)%4].retquan()!=-1&&(strstr((type==1?result[(j-start)%4].retname():result[(j-start)%4].retauth()),search)!=NULL))
+								j++;
+						else
+							if(result[(j-start)%4].retquan()!=-1&&((strstr(result[(j-start)%4].rettag1(),search)!=NULL)||(strstr(result[(j-start)%4].rettag2(),search)!=NULL)||(strstr(result[(j-start)%4].rettag3(),search)!=NULL)))
+								j++;
 					}
 					fin.close();
 					range=j-start;
 				}
-				else
-					range=0;
 				break;
 			case '\0':
-				getch();
+				c=getch();
 				i--;
+				if(c==80)
+				{
+					if(select<range)
+						select++;
+				}
+				else if(c==72)
+				{
+					if(select>1)
+						select--;
+				}
 				break;
 			default:
+				select=0;
 				search[i]=c;
 				search[i+1]=0;
 				ifstream fin;
 				fin.open("booklist.dat",ios::binary);
 				int j=0;
-				while(fin.read((char *)&result[(j-start)%5],sizeof(result[j]))&&j<(start+5))
+				while(fin.read((char *)&result[(j-start)%4],sizeof(result[j]))&&j<(start+4))
 				{
-					if(result[(j-start)%5].retquan()!=-1&&strstr(result[(j-start)%5].retauth(),search)!=NULL)
-					j++;
+					if(type==1||type==2)
+							if(result[(j-start)%4].retquan()!=-1&&(strstr((type==1?result[(j-start)%4].retname():result[(j-start)%4].retauth()),search)!=NULL))
+								j++;
+						else
+							if(result[(j-start)%4].retquan()!=-1&&((strstr(result[(j-start)%4].rettag1(),search)!=NULL)||(strstr(result[(j-start)%4].rettag2(),search)!=NULL)||(strstr(result[(j-start)%4].rettag3(),search)!=NULL)))
+								j++;
 				}
 				fin.close();
 				range=j-start;
@@ -447,34 +524,32 @@ void searchauth()
 		cout<<'\n';
 		print(" Search:")<<'\n';
 		print(search)<<"\n";
-		for(int i=0;i<6&&i<range;i++)
+		for(int i=0;i<range;i++)
 			result[i].show();
+		if(select!=0)
+		{
+			gotoxy(4,select*5);
+			cout<<(char)26;
+		}
 	}
 }
-void search()
+void searchmenu()
 {
 	clrscr();
 	cout<<"\n\n\n\n";
-	print("Search")<<"\n\n\n\n";
-	print("Press 1              to search by ID")<<"\n\n";
-	print("Press 2            to search by name")<<"\n\n";
-	print("Press 3          to search by author")<<"\n\n";
-	print("Press 4             to search by tag")<<"\n\n";
-	print("Press 5           to search by price")<<"\n\n";
+	print("Search")<<"\n\n\n\n\n";
+	print("Press 0              to search by ID")<<"\n\n";
+	print("Press 1            to search by name")<<"\n\n";
+	print("Press 2          to search by author")<<"\n\n";
+	print("Press 3             to search by tag")<<"\n\n";
 	print("Press Esc          to return to home")<<"\n\n"<<setw(40);
 	char ch=getch();
 	switch(ch)
 	{
 		case '1':
-			break;
 		case '2':
-			break;
 		case '3':
-			searchauth();
-			break;
-		case '4':
-			break;
-		case '5':
+			searchscr(ch-48);
 			break;
 		case 27:
 			break;
@@ -511,9 +586,14 @@ int menu()
 				b.assign(fout.tellp()/sizeof(b)+1);
 				fout.write((char *)&b,sizeof(b));
 			}
+			else if(b.retID()!=-1)
+			{
+				fout.seekp((b.retID()-1)*sizeof(b),ios::beg);
+				fout.write((char *)&b,sizeof(b));
+			}
 			return 1;
 		case '2':
-			search();
+			searchmenu();
 			return 1;
 		case '3':
 			return 1;
