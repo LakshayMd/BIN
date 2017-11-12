@@ -10,6 +10,7 @@
 #include<dos.h>
 #define print(i) cout<<setw((80+strlen(i))/2)<<i
 #define prINT(i) cout<<setw((80+intlen(i))/2)<<i
+char setpass[20]="";
 int intlen(long n)
 {
 	for(int i=0;n!=0;i++,n/=10);
@@ -343,18 +344,25 @@ void passout(int len,int code=0)
 		print("Invalid character");
 	else if(code==3)
 		print("This action cannot be undone. Confirm deletion?");
+	else if(code==4)
+		print("Confirm by entering old password");
+	else if(code==5)
+		print("Enter new password");
+	else if(code==6)
+		print("Re-enter new password");
+	else if(code==7)
+		print("Passwords do not match, please re-enter");
 	cout<<endl<<setw((80+strlen("Enter password (Esc to cancel) : ")-len)/2)<<"Enter password (esc to quit) : ";
 	for(int i=len;i>0;i--)
 	{
 		cout<<"*";
 	}
 }
-int pass(int code=1)
+int pass(int code=1,int mode=0)
 {
 	clrscr();
 	char c,pass[20]="",corr[20];
 	passout(0,code);
-	code=0;
 	for (int i=0;(i==0?1:pass[i-1])!='\0'&&i<20;i++)
 	{
 		c=getch();
@@ -380,11 +388,26 @@ int pass(int code=1)
 				passout(strlen(pass));
 		}
 	}
-	ifstream fin;
-	fin.open("encryp.txt");
-	fin.getline(corr,20);
-	fin.close();
-	return strcmp(pass,corr)==0?0:1;
+	if(!mode)
+	{
+		ifstream fin;
+		fin.open("encryp.txt");
+		fin.getline(corr,20);
+		fin.close();
+		return strcmp(pass,corr)==0?0:1;
+	}
+	else if(strcmp(pass,""))
+	{
+		if(code==5)
+		{
+			strcpy(setpass,pass);
+			return 0;
+		}
+		else
+			return (strcmp(setpass,pass)==0?0:1);
+	}
+	else
+		return 1;
 }
 void bookmenu(Book b)
 {
@@ -562,17 +585,45 @@ void searchmenu()
 			getch();
 	}
 }
+void changepass()
+{
+	int x=1;
+	while(x==1)
+		x=pass(4);
+	if(x==0)
+	{
+		x=1;
+		while(x==1)
+		{
+			x=pass(5,1);
+		}
+		if(x==0)
+		{
+			x=pass(6,1);
+			while(x==1)
+			{
+				x=pass(7,1);
+			}
+			if(x==0)
+			{
+				ofstream fout;
+				fout.open("encryp.txt");
+				fout<<setpass;
+				fout.close();
+			}
+		}
+	}
+}
 int menu()
 {
 	clrscr();
-	cout<<"\n\n\n\n";
+	cout<<"\n\n\n\n\n";
 	print("XD Book Shop")<<"\n\n\n";
 	print("Press 1         to add book to stock")<<"\n\n";
 	print("Press 2         to search for a book")<<"\n\n";
 	print("Press 3               to manage cart")<<"\n\n";
-	print("Press 4                  to checkout")<<"\n\n";
-	print("Press 5         to view transactions")<<"\n\n";
-	print("Press 6           to change password")<<"\n\n";
+	print("Press 4         to view transactions")<<"\n\n";
+	print("Press 5           to change password")<<"\n\n";
 	print("Press Esc        to log out and quit")<<"\n\n"<<setw(40);
 	char ch=getch();
 	switch(ch)
@@ -605,8 +656,7 @@ int menu()
 		case '4':
 			return 1;
 		case '5':
-			return 1;
-		case '6':
+			changepass();
 			return 1;
 		case 27:
 			return 0;
