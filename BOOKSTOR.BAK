@@ -106,13 +106,13 @@ void Book::add(int mode=1)
 	{
 		clrscr();
 		cout<<"\n";
-		if(!mode)
+		if(mode)
 			print("Add book")<<"\n\n\n";
 		else
 			print("Modify book")<<"\n\n\n";
 		print(" Book name:")<<endl;
 		print(name)<<"\n\n";
-		print(" Author:")<<endl;
+		print(" Author or Publisher:")<<endl;
 		print(author)<<"\n\n";
 		print(" Tags:")<<endl;
 		print(tag[0])<<endl;
@@ -241,13 +241,13 @@ void Book::add(int mode=1)
 							}
 							break;
 						case 6:
-							if(isdigit(c))
+							if(isdigit(c)&&quantity<99)
 								quantity=10*quantity+c-48;
 							if(c==8)
 								quantity/=10;
 							break;
 						case 7:
-							if(isdigit(c))
+							if(isdigit(c)&&price<6500)
 								price=10*price+c-48;
 							if(c==8)
 								price/=10;
@@ -357,7 +357,7 @@ class Transaction
 	long ID;
 	buy list[5];
 	int price[5];
-	long total;
+	double total;
 	char date[9];
 	public:
 	void assign(long id)
@@ -365,6 +365,7 @@ class Transaction
 		ID=id;
 	}
 	void add();
+	void show();
 };
 void Transaction::add()
 {
@@ -381,7 +382,24 @@ void Transaction::add()
 		price[i]=b.retprice();
 		total+=list[i].quantity*price[i];
 	}
+	list[i].quantity=0;
 	_strdate(date);
+}
+void Transaction::show()
+{
+	cout<<endl<<"     #"<<ID<<"\n\n";
+	cout<<setw(9)<<"Book ID"<<setw(9)<<"Name"<<setw(51)<<"Price"<<setw(9)<<"Quantity"<<endl<<" "<<space(78,'-');
+	ifstream fin;
+	Book b;
+	fin.open("booklist.dat",ios::binary);
+	for(int i=0;list[i].quantity;i++)
+	{
+		fin.seekg((list[i].ID-1)*sizeof(b));
+		fin.read((char *)&b,sizeof(b));
+		cout<<endl<<"  #"<<list[i].ID<<space(11-intlen(list[i].ID))<<b.retname()<<space(50-strlen(b.retname()))<<price[i]<<space(6-intlen(price[i]))<<list[i].quantity<<endl;
+	}
+	fin.close();
+	cout<<" "<<space(78,'-')<<endl<<space(64)<<total<<endl<<" "<<space(78,'-');
 }
 void passout(int len,int code=0)
 {	 //code=0 for no error, 1 for incorrect pass, 2 for invalid char
@@ -497,6 +515,8 @@ void bookmenu(Book b)
 					{
 						print("Error: cart is already full");
 					}
+					else if(!b.retquan())
+						print("Error: this book is out of stock");
 					else
 						print("Error: this book is already in the cart");
 					if(!getch())
@@ -545,7 +565,7 @@ void bookmenu(Book b)
 					}
 					x=pass(1);
 				}
-				break;
+				return;
 		}
 	}
 }
@@ -613,51 +633,53 @@ void searchscr(int type)
 				{
 					if(select<range)
 						select++;
-					/*else
+					else if(range==4)
 					{
 						start++;
 						ifstream fin;
 						fin.open("booklist.dat",ios::binary);
 						int j=0;
-						while(j<(start+4)&&fin.read((char *)&result[(j-start)%4],sizeof(result[j])))
+						while(j<(start+4)&&fin.read((char *)&result[j>start?(j-start):0],sizeof(result[0])))
 						{
 							if(type==1||type==2)
 							{
-								if(result[(j-start)%4].retquan()!=-1&&(strstr((type==1?result[(j-start)%4].retname():result[(j-start)%4].retauth()),search)!=NULL))
+								if(result[j>start?(j-start):0].retquan()!=-1&&(strstr((type==1?result[j>start?(j-start):0].retname():result[j>start?(j-start):0].retauth()),search)!=NULL))
 										j++;
 							}
 							else
-								if(result[(j-start)%4].retquan()!=-1&&((strstr(result[(j-start)%4].rettag1(),search)!=NULL)||(strstr(result[(j-start)%4].rettag2(),search)!=NULL)||(strstr(result[(j-start)%4].rettag3(),search)!=NULL)))
+								if(result[j>start?(j-start):0].retquan()!=-1&&((strstr(result[j>start?(j-start):0].rettag1(),search)!=NULL)||(strstr(result[j>start?(j-start):0].rettag2(),search)!=NULL)||(strstr(result[j>start?(j-start):0].rettag3(),search)!=NULL)))
 									j++;
 						}
 						fin.close();
 						range=j-start;
-					}*/
+						if(range==3)
+							select--;
+					}
 				}
 				else if(c==72)
 				{
 					if(select>1)
 						select--;
-					/*else
+					else if(start>0)
 					{
 						start--;
 						ifstream fin;
 						fin.open("booklist.dat",ios::binary);
 						int j=0;
-						while(j<(start+4)&&fin.read((char *)&result[(j-start)%4],sizeof(result[j])))
+						while(j<(start+4)&&fin.read((char *)&result[j>start?(j-start):0],sizeof(result[0])))
 						{
 							if(type==1||type==2)
 							{
-								if(result[(j-start)%4].retquan()!=-1&&(strstr((type==1?result[(j-start)%4].retname():result[(j-start)%4].retauth()),search)!=NULL))
+								if(result[j>start?(j-start):0].retquan()!=-1&&(strstr((type==1?result[j>start?(j-start):0].retname():result[j>start?(j-start):0].retauth()),search)!=NULL))
 										j++;
 							}
 							else
-								if(result[(j-start)%4].retquan()!=-1&&((strstr(result[(j-start)%4].rettag1(),search)!=NULL)||(strstr(result[(j-start)%4].rettag2(),search)!=NULL)||(strstr(result[(j-start)%4].rettag3(),search)!=NULL)))
+								if(result[j>start?(j-start):0].retquan()!=-1&&((strstr(result[j>start?(j-start):0].rettag1(),search)!=NULL)||(strstr(result[j>start?(j-start):0].rettag2(),search)!=NULL)||(strstr(result[j>start?(j-start):0].rettag3(),search)!=NULL)))
 									j++;
 						}
 						fin.close();
 						range=j-start;
-					} */
+					}
 				}
 				break;
 			default:
@@ -672,15 +694,15 @@ void searchscr(int type)
 				{
 					if(type==1||type==2)
 					{
-						if(result[(j-start)%4].retquan()!=-1&&(strstr((type==1?result[(j-start)%4].retname():result[(j-start)%4].retauth()),search)!=NULL))
+						if(result[j%4].retquan()!=-1&&(strstr((type==1?result[j%4].retname():result[j%4].retauth()),search)!=NULL))
 								j++;
 					}
 					else
-						if(result[(j-start)%4].retquan()!=-1&&((strstr(result[(j-start)%4].rettag1(),search)!=NULL)||(strstr(result[(j-start)%4].rettag2(),search)!=NULL)||(strstr(result[(j-start)%4].rettag3(),search)!=NULL)))
+						if(result[j%4].retquan()!=-1&&((strstr(result[j%4].rettag1(),search)!=NULL)||(strstr(result[j%4].rettag2(),search)!=NULL)||(strstr(result[j%4].rettag3(),search)!=NULL)))
 							j++;
 				}
 				fin.close();
-				range=j-start;
+				range=j;
 		}
 		clrscr();
 		cout<<'\n';
@@ -770,8 +792,9 @@ void cartmenu()
 				fin.seekg((cart[i].ID-1)*sizeof(b));
 				fin.read((char *)&b,sizeof(b));
 				cout<<endl<<"  #"<<cart[i].ID<<space(11-intlen(cart[i].ID))<<b.retname()<<space(50-strlen(b.retname()))<<b.retprice()<<space(6-intlen(b.retprice()))<<cart[i].quantity<<endl;
+				fin.close();
 			}
-			long total=0;
+			double total=0;
 			for(i=0;i<N;i++)
 			{
 				ifstream fin;
@@ -779,13 +802,21 @@ void cartmenu()
 				fin.seekg((cart[i].ID-1)*sizeof(b));
 				fin.read((char *)&b,sizeof(b));
 				total+=cart[i].quantity*b.retprice();
+				fin.close();
 			}
 			cout<<" "<<space(78,'-')<<endl<<space(64)<<total<<endl<<" "<<space(78,'-');
+			gotoxy(1,21);
+			print("Arrow keys to select")<<endl;
+			print("+ and - to increaase/decrease quantity of selected item")<<endl;
+			print("Delete key to remove item from cart")<<endl;
+			print("Press Enter twice to proceed with transaction");
 			if(select)
 			{
 				gotoxy(2,4+select*2);
 				cout<<(char)26;
 			}
+			else
+				gotoxy(1,25);
 			switch(getch())
 			{
 				case 0:
@@ -829,10 +860,10 @@ void cartmenu()
 						f.open("booklist.dat",ios::binary|ios::in|ios::out);
 						for(int h=0;h<N;h++)
 						{
-							f.seekg((cart[h].ID-1)*sizeof(b),ios::beg);
+							f.seekg((cart[h].ID-1)*sizeof(b));
 							f.read((char *)&b,sizeof(b));
 							b.sell(cart[h].quantity);
-							f.seekg(-1*sizeof(b),ios::cur);
+							f.seekg((cart[h].ID-1)*sizeof(b));
 							f.write((char *)&b,sizeof(b));
 						}
 						f.close();
@@ -841,6 +872,7 @@ void cartmenu()
 						print("Transaction successful");
 						if(!getch())
 							getch();
+						N=0;
 						return;
 					}
 					break;
@@ -875,6 +907,9 @@ void cartmenu()
 		if(!getch())
 			getch();
 	}
+}
+void trans()
+{
 }
 int menu()
 {
@@ -917,6 +952,16 @@ int menu()
 			cartmenu();
 			return 1;
 		case '4':
+			clrscr();
+			trans();
+			/*Transaction t;
+			ifstream fin;
+			fin.open("transact.dat",ios::binary);
+			fin.read((char *)&t,sizeof(t));
+			t.show();
+			fin.close();
+			if(!getch())
+				getch();   */
 			return 1;
 		case '5':
 			changepass();
