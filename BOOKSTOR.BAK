@@ -485,7 +485,7 @@ void Transaction::show()
 }
 void transinfo(stack s)
 {
-	Transaction t[9],t1;
+	Transaction t[8],t1;
 	int j=0,select=0,start=0,total=0,quan=0;
 	ifstream fin;
 	fin.open("transact.dat",ios::binary);
@@ -502,14 +502,14 @@ void transinfo(stack s)
 	{
 		while(!fin.eof())
 		{
-			fin.read((char *)&((j<start)?t[0]:(j-start<9?t[j-start]:t1)),sizeof(t1));
-			for(int i=0;i<5&&((j<start)?t[0]:(j-start<9?t[j-start]:t1)).retlist(i).quantity;i++)
+			fin.read((char *)&((j<start)?t[0]:(j-start<8?t[j-start]:t1)),sizeof(t1));
+			for(int i=0;i<5&&((j<start)?t[0]:(j-start<8?t[j-start]:t1)).retlist(i).quantity;i++)
 			{
 				for(transID * p=s.rettop();p!=NULL;p=p->next)
-				{	if(p->ID==((j<start)?t[0]:(j-start<9?t[j-start]:t1)).retlist(i).ID)
+				{	if(p->ID==((j<start)?t[0]:(j-start<8?t[j-start]:t1)).retlist(i).ID)
 					{
-						quan+=(j<start?t[0]:(j-start<9?t[j-start]:t1)).retlist(i).quantity;
-						total+=((j<start?t[0]:(j-start<9?t[j-start]:t1)).retlist(i).quantity)*(t[j<start?0:(j-start)].retprice(i));
+						quan+=(j<start?t[0]:(j-start<8?t[j-start]:t1)).retlist(i).quantity;
+						total+=((j<start?t[0]:(j-start<8?t[j-start]:t1)).retlist(i).quantity)*(t[j<start?0:(j-start)].retprice(i));
 						j++;
 						break;
 					}
@@ -535,6 +535,9 @@ void transinfo(stack s)
 			t[i].showpart();
 		}
 		cout<<' '<<space(78,'-');
+		gotoxy(1,24);
+		print("Arrow keys and enter key to navigate search results")<<endl;
+		print("Esc to go back");
 		if(select>j-start)
 			select=j-start;
 		if(select)
@@ -800,6 +803,11 @@ void searchscr(int type,int mode=1,Book * b=NULL,char x=0)
 						*b=result[select-1];
 						return;
 					}
+				}
+				else if(mode==2)
+				{
+					(*b).setname(search);
+					return;
 				}
 				i--;
 				break;

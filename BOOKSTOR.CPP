@@ -804,6 +804,11 @@ void searchscr(int type,int mode=1,Book * b=NULL,char x=0)
 						return;
 					}
 				}
+				else if(mode==2)
+				{
+					(*b).setname(search);
+					return;
+				}
 				i--;
 				break;
 			case '\b':
