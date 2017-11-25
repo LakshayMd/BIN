@@ -6,7 +6,6 @@
 #include<stdio.h>
 #include<stdlib.h>
 #include<conio.h>
-#include<graphics.h>
 #include<string.h>
 #include<dos.h>
 #define print(i) cout<<setw((80+strlen(i))/2)<<i
@@ -57,6 +56,7 @@ int intlen(long n)
 	return i?i:1;
 }
 void transinfo(stack);
+char * partsearch(int,char);
 class Book
 {
 	int ID;
@@ -151,7 +151,7 @@ void Book::add(int mode=1)
 			print("Modify book")<<"\n\n\n";
 		print(" Book name:")<<endl;
 		print(name)<<"\n\n";
-		print(" Author or Publisher:")<<endl;
+		print(" Author:")<<endl;
 		print(author)<<"\n\n";
 		print(" Tags:")<<endl;
 		print(tag[0])<<endl;
@@ -235,16 +235,6 @@ void Book::add(int mode=1)
 					switch(select)
 					{
 						case 1:
-							/*if(c=='\b')
-							{
-								if(name[0]!='\0')
-									name[strlen(name)-1]='\0';
-							}
-							else if(strlen(name)<50)
-							{
-								name[strlen(name)+1]='\0';
-								name[strlen(name)]=c;
-							} */
 							if(c=='\b')
 								name[0]=0;
 							else
@@ -256,50 +246,28 @@ void Book::add(int mode=1)
 							break;
 						case 2:
 							if(c=='\b')
+								author[0]=0;
+							else
 							{
-								if(author[0]!='\0')
-									author[strlen(author)-1]='\0';
-							}
-							else if(strlen(author)<30)
-							{
-								author[strlen(author)+1]='\0';
-								author[strlen(author)]=c;
+								char * temp=partsearch(1,c);
+								if(temp!=NULL)
+								{
+									strcpy(author,temp);
+								}
 							}
 							break;
 						case 3:
-							if(c=='\b')
-							{
-								if(tag[0][0]!='\0')
-									tag[0][strlen(tag[0])-1]='\0';
-							}
-							else if(strlen(tag[0])<20)
-							{
-								tag[0][strlen(tag[0])+1]='\0';
-								tag[0][strlen(tag[0])]=c;
-							}
-							break;
 						case 4:
-							if(c=='\b')
-							{
-								if(tag[1][0]!='\0')
-									tag[1][strlen(tag[1])-1]='\0';
-							}
-							else if(strlen(tag[1])<20)
-							{
-								tag[1][strlen(tag[1])+1]='\0';
-								tag[1][strlen(tag[1])]=c;
-							}
-							break;
 						case 5:
 							if(c=='\b')
 							{
-								if(tag[2][0]!='\0')
-									tag[2][strlen(tag[2])-1]='\0';
+								if(tag[select-3][0]!='\0')
+									tag[select-3][strlen(tag[select-3])-1]='\0';
 							}
-							else if(strlen(tag[2])<20)
+							else if(strlen(tag[select-3])<19)
 							{
-								tag[2][strlen(tag[2])+1]='\0';
-								tag[2][strlen(tag[2])]=c;
+								tag[select-3][strlen(tag[select-3])+1]='\0';
+								tag[select-3][strlen(tag[select-3])]=c;
 							}
 							break;
 						case 6:
@@ -331,89 +299,6 @@ void Book::show()
 		cout<<", "<<tag[2];
 	cout<<space(60-strlen(tag[0])-(strlen(tag[1])==0?0:(strlen(tag[1])+2))-(strlen(tag[2])==0?0:strlen(tag[2])+2)-intlen(price))<<"Rs. "<<price<<endl;
 }
-/*int enterdata(char c, char * a="", char * b="")
-{
-	int j=0,select=0;
-	char str[20]=" ";
-	str[0]=c;
-	Book search[10];
-	for(int i=1;(i==0?1:str[i-1])!='\0';i<20?(i++):(i=20))
-	{
-		clrscr();
-		cout<<endl;
-		print(" Enter string:")<<endl;
-		print(str)<<"\n\n";
-		ifstream fin;
-		fin.open("booklist.dat",ios::binary);
-		while(fin.read((char *)&search[j],sizeof(search[j]))&&j<10)
-		{
-			if(strstr(search[j].rettag(),str)!=NULL)
-			{
-				for(int k=0,found=0;k<j;k++)
-					cout<<endl;
-					print(t[j].name)<<endl;
-					j++;
-			}
-		}
-		fin.close();
-		c=getch();
-		switch(c)
-		{
-			case 27:
-				return 0;
-			case '\b':
-				if(i!=0)
-				{
-					str[i-1]='\0';
-					i--;
-				}
-				i--;
-				break;
-			case '\r':
-				str[i]='\0';
-				break;
-			case '\0':
-				c=getch();
-				i--;
-				if(c==72)
-					if(select>0)
-						select--;
-					else
-						select=j;
-				else
-					if(c==80)
-						if(select<j)
-							select++;
-						else
-							select=0;
-				break;
-			default:
-				select=0;
-				str[i]=c;
-		}
-	}
-	if(select==0)
-	{
-		fstream f;
-		f.open("tags.dat",ios::binary|ios::in|ios::out);
-		i=0;
-		while(f.read((char *)&t[0],sizeof(t[0])))
-		{
-			if(!strcmpi(t[0].name,str))
-			{
-				f.close();
-				return t[0].ID;
-			}
-		}
-		t[0].ID=(f.tellg()/sizeof(t[0])+1);
-		strcpy(t[0].name,str);
-		f.write((char *)&t[0],sizeof(t[0]));
-		f.close();
-		return t[0].ID;
-	}
-	else
-		return t[select-1].ID;
-}*/
 class Transaction
 {
 	long ID;
@@ -422,6 +307,10 @@ class Transaction
 	double total;
 	char date[9];
 	public:
+	char * retdate()
+	{
+		return date;
+	}
 	void assign(long id)
 	{
 		ID=id;
@@ -447,7 +336,7 @@ void Transaction::showpart()
 		total+=price[i]*list[i].quantity;
 		i++;
 	}
-	cout<<endl<<setw(16+intlen(ID)/2)<<ID<<setw(23-intlen(ID)/2+intlen(quan)/2)<<quan<<setw(25-intlen(quan)/2+intlen(total)/2)<<total<<endl;
+	cout<<endl<<setw(9+intlen(ID)/2)<<ID<<setw(13-intlen(ID)/2+strlen(date))<<date<<setw(26-strlen(date)+intlen(quan)/2)<<quan<<setw(19-intlen(quan)/2+intlen(total)/2)<<total<<endl;
 }
 void Transaction::add()
 {
@@ -485,8 +374,9 @@ void Transaction::show()
 }
 void transinfo(stack s)
 {
+	clrscr();
 	Transaction t[8],t1;
-	int j=0,select=0,start=0,total=0,quan=0;
+	int j=0,select=0,start=0,total=0,quan=0,found;
 	ifstream fin;
 	fin.open("transact.dat",ios::binary);
 	if(!fin)
@@ -498,46 +388,50 @@ void transinfo(stack s)
 			getch();
 		return;
 	}
-	while(1)
+	while(fin.read((char *)&((j<start)?t[0]:(j-start<8?t[j-start]:t1)),sizeof(t1)))
 	{
-		while(!fin.eof())
+		found=0;
+		for(int i=0;i<5&&((j<start)?t[0]:(j-start<8?t[j-start]:t1)).retlist(i).quantity;i++)
 		{
-			fin.read((char *)&((j<start)?t[0]:(j-start<8?t[j-start]:t1)),sizeof(t1));
-			for(int i=0;i<5&&((j<start)?t[0]:(j-start<8?t[j-start]:t1)).retlist(i).quantity;i++)
+			for(transID * p=s.rettop();p!=NULL;p=p->next)
 			{
-				for(transID * p=s.rettop();p!=NULL;p=p->next)
-				{	if(p->ID==((j<start)?t[0]:(j-start<8?t[j-start]:t1)).retlist(i).ID)
+				if(p->ID==((j<start)?t[0]:(j-start<8?t[j-start]:t1)).retlist(i).ID)
+				{
+					quan+=(j<start?t[0]:(j-start<8?t[j-start]:t1)).retlist(i).quantity;
+					total+=((j<start?t[0]:(j-start<8?t[j-start]:t1)).retlist(i).quantity)*(t[j<start?0:(j-start)].retprice(i));
+					if(!found)
 					{
-						quan+=(j<start?t[0]:(j-start<8?t[j-start]:t1)).retlist(i).quantity;
-						total+=((j<start?t[0]:(j-start<8?t[j-start]:t1)).retlist(i).quantity)*(t[j<start?0:(j-start)].retprice(i));
 						j++;
-						break;
+						found=1;
 					}
 				}
 			}
 		}
-		if(!quan)
-		{
-			clrscr();
-			gotoxy(1,13);
-			print("No matching transactions found");
-			if(!getch())
-				getch();
-			return;
-		}
+	}
+	if(!quan)
+	{
+		clrscr();
+		gotoxy(1,13);
+		print("No matching transactions found");
+		if(!getch())
+			getch();
+		fin.close();
+		return;
+	}
+	while(1)
+	{
 		clrscr();
 		cout<<endl;
 		print("Matching transactions")<<"\n\n";
 		cout<<"     Total items sold: "<<quan<<setw(52-intlen(quan)-intlen(total))<<"Amount transacted: "<<total<<"\n\n";
-		cout<<setw(16)<<"ID"<<setw(28)<<"Total items"<<setw(25)<<"Total amount"<<endl<<" "<<space(78,'-');
+		cout<<setw(10)<<"ID"<<setw(23)<<"Date (MM/DD/YY)"<<setw(20)<<"Total items"<<setw(20)<<"Total amount"<<endl<<" "<<space(78,'-');
 		for(int i=0;i<j-start;i++)
 		{
 			t[i].showpart();
 		}
 		cout<<' '<<space(78,'-');
-		gotoxy(1,24);
-		print("Arrow keys and enter key to navigate search results")<<endl;
-		print("Esc to go back");
+		gotoxy(1,25);
+		print("Arrow keys and enter key to navigate search results");
 		if(select>j-start)
 			select=j-start;
 		if(select)
@@ -548,6 +442,7 @@ void transinfo(stack s)
 		switch(getch())
 		{
 			case 27:
+				fin.close();
 				return;
 			case 0:
 				switch(getch())
@@ -715,6 +610,11 @@ void bookmenu(Book b)
 						fout.seekp((b.retID()-1)*sizeof(b));
 						fout.write((char *)&b,sizeof(b));
 						fout.close();
+						clrscr();
+						gotoxy(1,13);
+						print("Book modified successfully");
+						if(!getch())
+							getch();
 					}
 					else
 					{
@@ -875,6 +775,111 @@ void searchscr(int type,int mode=1,Book * b=NULL,char x=0)
 		{
 			gotoxy(4,select*5);
 			cout<<(char)26;
+		}
+	}
+}
+char * partsearch(int type,char x=0)
+{
+	char c,search[30]=" ";
+	search[0]=x;
+	Book b;
+	ifstream fin("booklist.dat",ios::binary);
+	fin.seekg(0,ios::end);
+	int select=0,start=0,i=0,found;
+	char * result=new char[30*fin.tellg()/sizeof(b)];
+	while(i<sizeof(result))
+	{
+		result[i]=0;
+		i+=30;
+	}
+	while(1)
+	{
+		clrscr();
+		int j=0;
+		cout<<endl;
+		print("Search:")<<endl;
+		print(search)<<"\n\n";
+		fin.seekg(0,ios::beg);
+		fin.clear();
+		while(fin.read((char *)&b,sizeof(b))&&j-start<9)
+		{
+			if(type==1?(strstr(b.retauth(),search)!=NULL):(strstr(b.rettag(0),search)!=NULL||strstr(b.rettag(1),search)!=NULL||strstr(b.rettag(2),search)!=NULL))
+			{
+				for(i=0,found=0;!found&&i<j;i++)
+					if(!strcmpi(&result[i*30],type==1?b.retauth():(strstr(b.rettag(0),search)!=NULL?b.rettag(0):(strstr(b.rettag(1),search)==NULL?b.rettag(2):b.rettag(1)))))
+						found=1;
+				if(!found)
+				{
+					strcpy(&result[30*j++],type==1?b.retauth():(strstr(b.rettag(0),search)!=NULL?b.rettag(0):(strstr(b.rettag(1),search)==NULL?b.rettag(2):b.rettag(1))));
+				}
+			}
+		}
+		for(i=start;i<j;i++)
+			print(&result[i*30])<<"\n\n";
+		if(select>j-start)
+			select=j-start;
+		if(select)
+		{
+			gotoxy(20,3+2*select);
+			cout<<(char)26;
+		}
+		c=getch();
+		switch(c)
+		{
+			case 27:
+				delete result;
+				fin.close();
+				return NULL;
+			case 0:
+				switch(getch())
+				{
+					case 72:
+						if(select>1)
+							select--;
+						else if(start)
+							start--;
+						break;
+					case 80:
+						if(select<j-start)
+							select++;
+						else if(j-start==9)
+							start++;
+				}
+				break;
+			case '\r':
+				if(x)
+				{
+					if(select)
+						strcpy(search,&result[(select+start-1)*30]);
+					delete result;
+					fin.close();
+					return search;
+				}
+				else if(select)
+				{
+					fin.seekg(0,ios::beg);
+					fin.clear();
+					stack s;
+					while(fin.read((char *)&b,sizeof(b)))
+						if((type==1)?(!strcmpi(b.retauth(),&result[(select+start-1)*30])):(!strcmpi(b.rettag(0),&result[(start+select-1)*30])||!strcmpi(b.rettag(1),&result[(select+start-1)*30])||!strcmpi(b.rettag(2),&result[(select+start-1)*30])))
+							s.push(b.retID());
+					transinfo(s);
+					break;
+				}
+				break;
+			case '\b':
+				select=0;
+				start=0;
+				search[strlen(search)-1]=0;
+				break;
+			default:
+				select=0;
+				start=0;
+				if(strlen(search)<(type==1?30:20))
+				{
+					search[strlen(search)+1]=0;
+					search[strlen(search)]=c;
+				}
 		}
 	}
 }
@@ -1072,6 +1077,129 @@ void cartmenu()
 			getch();
 	}
 }
+void datesearch()
+{
+	char c,date[]="--/--/--";
+	for(int i=0;;i+=(i<6?1:0))
+	{
+		clrscr();
+		gotoxy(1,12);
+		print("Enter the date from which transactions are needed")<<endl;
+		print(date)<<endl;
+		print("(MM/DD/YY)");
+		gotoxy(37+(i+i/2),13);
+		c=getch();
+		switch(c)
+		{
+			case 0:
+				getch();
+				break;
+			case '\b':
+				if(i>0)
+					date[(--i)+i/2]='-';
+				i--;
+				break;
+			case '\r':
+				if(isdigit(date[0])&&isdigit(date[1])&&isdigit(date[3])&&isdigit(date[4])&&isdigit(date[6])&&isdigit(date[7]))
+				{
+					Transaction t;
+					stack s;
+					int found=0;
+					char tdate[9];
+					ifstream fin("transact.dat",ios::binary);
+					while(!found&&fin.read((char *)&t,sizeof(t)))
+					{
+						strcpy(tdate,t.retdate());
+						if(date[6]<tdate[6]
+						||(date[6]==tdate[6]&&date[7]<tdate[7])
+						||(date[6]==tdate[6]&&date[7]==tdate[7]&&date[0]<tdate[0])
+						||(date[6]==tdate[6]&&date[7]==tdate[7]&&date[0]==tdate[0]&&date[1]<tdate[1])
+						||(date[6]==tdate[6]&&date[7]==tdate[7]&&date[0]==tdate[0]&&date[1]==tdate[1]&&date[3]<tdate[3])
+						||(date[6]==tdate[6]&&date[7]==tdate[7]&&date[0]==tdate[0]&&date[1]==tdate[1]&&date[3]==tdate[3]&&date[4]<=tdate[4]))
+							found=1;
+					}
+					if(found)
+					{
+						clrscr();
+						cout<<endl;
+						int start=0,select=0,quan=0,total=0,j=0;
+						print("Matching transactions")<<"\n\n";
+						cout<<"     Total items sold: "<<quan<<setw(52-intlen(quan)-intlen(total))<<"Amount transacted: "<<total<<"\n\n";
+						cout<<setw(10)<<"ID"<<setw(23)<<"Date (MM/DD/YY)"<<setw(20)<<"Total items"<<setw(20)<<"Total amount"<<endl<<" "<<space(78,'-');
+						do
+						{
+							if(j>=start)
+								t.showpart();
+							j++;
+						}while(fin.read((char *)&t,sizeof(t)));
+						cout<<' '<<space(78,'-');
+						gotoxy(1,25);
+						print("Arrow keys and enter key to navigate search results");
+						if(select>j-start)
+							select=j-start;
+						if(select)
+						{
+							gotoxy(5,select*2+6);
+							cout<<(char)26;
+						}
+						switch(getch())
+						{
+							case 27:
+								fin.close();
+								return;
+							case 0:
+								switch(getch())
+								{
+									case 72:
+										if(select>1)
+											select--;
+										else if(start)
+											start--;
+										break;
+									case 80:
+										if(select<j-start)
+											select++;
+										else if(j-start==9)
+											start++;
+								}
+								break;
+							case '\r':
+							if(select)
+								{
+									clrscr();
+									//t[select-1].show();
+									if(!getch())
+										getch();
+								}
+							}
+					}
+					else
+					{
+						clrscr();
+						gotoxy(1,13);
+						print("No matching transactions found");
+						if(!getch())
+							getch();
+					}
+					fin.close();
+				}
+				else
+				{
+					cout<<"y tho ;-;";getch();
+				}
+				break;
+			case 27:
+				return;
+			default:
+				if(isdigit(c))
+				{
+					date[i+i/2]=c;
+				}
+				else
+					i--;
+		}
+	}
+}
 void transmenu()
 {
 	while(1)
@@ -1081,8 +1209,8 @@ void transmenu()
 		print("View Transactions")<<"\n\n\n";
 		print("Press 1         to see transactions by book")<<"\n\n";
 		print("Press 2       to see transactions by author")<<"\n\n";
-		print("Press 3      to see transactions since date")<<"\n\n";
-		print("Press 4          to see transactions by tag")<<"\n\n";
+		print("Press 3          to see transactions by tag")<<"\n\n";
+		print("Press 4      to see transactions since date")<<"\n\n";
 		print("Press Esc                 to return to home")<<"\n\n";
 		switch(getch())
 		{
@@ -1094,6 +1222,14 @@ void transmenu()
 			case '1':
 				searchscr(1,0);
 				break;
+			case '2':
+				partsearch(1);
+				break;
+			case '3':
+				partsearch(2);
+				break;
+			case '4':
+				datesearch();
 		}
 	}
 }
@@ -1150,19 +1286,6 @@ int menu()
 		case '4':
 			clrscr();
 			transmenu();
-		   /*
-			Transaction t;
-			ifstream fin;
-			fin.open("transact.dat",ios::binary);
-			//while(!fin.eof())
-		   //	{
-				fin.read((char *)&t,sizeof(t));
-					fin.read((char *)&t,sizeof(t));
-				t.show();
-			//}
-			fin.close();
-			if(!getch())
-				getch(); */
 			return 1;
 		case '5':
 			changepass();
