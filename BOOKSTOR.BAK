@@ -80,22 +80,6 @@ class Book
 	{
 		strcpy(name,str);
 	}
-	void setauth(char * str)
-	{
-		strcpy(author,str);
-	}
-	void settag(int i,char * str)
-	{
-		strcpy(tag[i],str);
-	}
-	void setprice(int i)
-	{
-		price=i;
-	}
-	void setquan(int i)
-	{
-		quantity=i;
-	}
 	void del()
 	{
 		quantity=-1;
@@ -319,6 +303,10 @@ class Transaction
 	int retprice(int i)
 	{
 		return price[i];
+	}
+	double rettotal()
+	{
+		return total;
 	}
 	buy retlist(int i)
 	{
@@ -1103,8 +1091,8 @@ void datesearch()
 				if(isdigit(date[0])&&isdigit(date[1])&&isdigit(date[3])&&isdigit(date[4])&&isdigit(date[6])&&isdigit(date[7]))
 				{
 					Transaction t;
-					stack s;
 					int found=0;
+					long pos=0;
 					char tdate[9];
 					ifstream fin("transact.dat",ios::binary);
 					while(!found&&fin.read((char *)&t,sizeof(t)))
@@ -1116,62 +1104,80 @@ void datesearch()
 						||(date[6]==tdate[6]&&date[7]==tdate[7]&&date[0]==tdate[0]&&date[1]<tdate[1])
 						||(date[6]==tdate[6]&&date[7]==tdate[7]&&date[0]==tdate[0]&&date[1]==tdate[1]&&date[3]<tdate[3])
 						||(date[6]==tdate[6]&&date[7]==tdate[7]&&date[0]==tdate[0]&&date[1]==tdate[1]&&date[3]==tdate[3]&&date[4]<=tdate[4]))
+						{
 							found=1;
+							pos=fin.tellg()-sizeof(t);
+						}
 					}
 					if(found)
 					{
-						clrscr();
-						cout<<endl;
-						int start=0,select=0,quan=0,total=0,j=0;
-						print("Matching transactions")<<"\n\n";
-						cout<<"     Total items sold: "<<quan<<setw(52-intlen(quan)-intlen(total))<<"Amount transacted: "<<total<<"\n\n";
-						cout<<setw(10)<<"ID"<<setw(23)<<"Date (MM/DD/YY)"<<setw(20)<<"Total items"<<setw(20)<<"Total amount"<<endl<<" "<<space(78,'-');
-						do
+						int start=0,select=0,quan,total,j;
+						while(1)
 						{
-							if(j>=start)
-								t.showpart();
-							j++;
-						}while(fin.read((char *)&t,sizeof(t)));
-						cout<<' '<<space(78,'-');
-						gotoxy(1,25);
-						print("Arrow keys and enter key to navigate search results");
-						if(select>j-start)
-							select=j-start;
-						if(select)
-						{
-							gotoxy(5,select*2+6);
-							cout<<(char)26;
-						}
-						switch(getch())
-						{
-							case 27:
-								fin.close();
-								return;
-							case 0:
-								switch(getch())
-								{
-									case 72:
-										if(select>1)
-											select--;
-										else if(start)
-											start--;
-										break;
-									case 80:
-										if(select<j-start)
-											select++;
-										else if(j-start==9)
-											start++;
-								}
-								break;
-							case '\r':
-							if(select)
-								{
-									clrscr();
-									//t[select-1].show();
-									if(!getch())
-										getch();
-								}
+							clrscr();
+							cout<<endl;
+							print("Matching transactions")<<"\n\n";
+							cout<<"\n\n"<<setw(10)<<"ID"<<setw(23)<<"Date (MM/DD/YY)"<<setw(20)<<"Total items"<<setw(20)<<"Total amount"<<endl<<" "<<space(78,'-');
+							total=0,quan=0,j=0;
+							fin.seekg(pos);
+							fin.clear();
+							while(fin.read((char *)&t,sizeof(t)))
+							{
+								if(j>=start&&j<=start+7)
+									t.showpart();
+								total+=t.rettotal();
+								for(int m=0;t.retlist(m).quantity;m++)
+									quan+=t.retlist(m).quantity;
+								j++;
 							}
+							cout<<' '<<space(78,'-');
+							gotoxy(1,25);
+							print("Arrow keys and enter key to navigate search results");
+							gotoxy(1,4);
+							cout<<"     Total items sold: "<<quan<<setw(52-intlen(quan)-intlen(total))<<"Amount transacted: "<<total<<"\n\n";
+							if(select>j-start)
+								select=j-start;
+							if(select)
+							{
+								gotoxy(5,select*2+6);
+								cout<<(char)26;
+							}
+							else
+								gotoxy(25,80);
+							switch(getch())
+							{
+								case 27:
+									fin.close();
+									return;
+								case 0:
+									switch(getch())
+									{
+										case 72:
+											if(select>1)
+												select--;
+											else if(start)
+												start--;
+												break;
+										case 80:
+											if(select<j-start)
+												select++;
+											else if(j-start==9)
+												start++;
+									}
+									break;
+								case '\r':
+									if(select)
+									{
+										clrscr();
+										fin.seekg(pos+sizeof(t)*(select-1));
+										fin.clear();
+										fin.read((char *)&t,sizeof(t));
+										t.show();
+										if(!getch())
+											getch();
+									}
+							}
+						}
 					}
 					else
 					{
