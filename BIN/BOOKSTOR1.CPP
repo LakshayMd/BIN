@@ -10,14 +10,14 @@
 #include<dos.h>
 #define print(i) cout<<setw((80+strlen(i))/2)<<i
 #define prINT(i) cout<<setw((80+intlen(i))/2)<<i
-char setpass[20];
-int N=0;   //no of items in cart
+char setpass[20]; //temporarily stores new password when trying to change it
+int N=0; //no of items in cart
 struct transID
 {
 	long ID;
 	transID * next;
 };
-class stack
+class stack //stores IDs of books that satisfy search criteria so that data can be compiled accordingly
 {
 	transID * top;
 	public:
@@ -42,7 +42,7 @@ struct buy
 	long ID;
 	int quantity;
 }cart[5];
-char * space(int i,char c=' ')
+char * space(int i,char c=' ')  //function to return a string of the character c repeated i times
 {
 	char * str=new char[i+1];
 	str[i]='\0';
@@ -50,7 +50,7 @@ char * space(int i,char c=' ')
 		str[i]=c;
 	return str;
 }
-int intlen(long n)
+int intlen(long n) //returns no of digits in a number
 {
 	for(int i=0;n!=0;i++,n/=10);
 	return i?i:1;
@@ -82,8 +82,8 @@ class Book
 	}
 	void del()
 	{
-		quantity=-1;
-	}
+		quantity=-1; //instead of deleting the data of a book from the file
+	}    //we decided to do this and not display any books with quantity -1
 	char * retauth()
 	{
 		return author;
@@ -111,8 +111,8 @@ class Book
 };
 void searchscr(int,int,Book *,char);
 void Book::add(int mode=1)
-{
-	int select=1; //mode=1 for add, 0 for modify
+{                 //mode=1 for add, 0 for modify
+	int select=1; //text field selected (=8 for the done button)
 	char c=0;
 	if(mode==1)
 	{
@@ -125,7 +125,7 @@ void Book::add(int mode=1)
 		quantity=0;
 		price=0;
 	}
-	while(c!=27)
+	while(c!=27) //ascii for esc key
 	{
 		clrscr();
 		cout<<"\n";
@@ -147,21 +147,21 @@ void Book::add(int mode=1)
 		prINT(price)<<"\n\n\n";
 		print("Done");
 		gotoxy(15,select<4?3*(select+1):select==4?13:select*3-1);
-		cout<<(char)26;
+		cout<<(char)26; //these 2 lines are to print the arrow that shows selection
 		gotoxy(1,25);
 			c=getch();
 		if(c=='\0')
 		{
-			c=getch();
+			c=getch(); //keys which give '\0' on press return another character after '\0'
 			switch(c)
 			{
-				case 72:
+				case 72: //up arrow key
 					if(select!=1)
 						select--;
 					else
 						select=8;
 					break;
-				case 80:
+				case 80: //down arrow key
 					if(select!=8)
 						select++;
 					else
@@ -207,25 +207,25 @@ void Book::add(int mode=1)
 							{
 								strcpy(tag[1],tag[2]);
 								tag[2][0]=0;
-							}
+							} //these 3 ifs make sure that the tags are filled in order
 							return;
 						}
 					}
 					break;
 				case 27:
-					ID=-1;
+					ID=-1; //to mark that add book cancelled
 					break;
 				default:
 					switch(select)
 					{
 						case 1:
 							if(c=='\b')
-								name[0]=0;
+								name[0]=0; //clears the name
 							else
-							{
-								searchscr(1,2,this,c);
-								if(ID)
-									mode=0;
+							{ //redirect to search function
+								searchscr(1,2,this,c); //modify the book details
+								if(ID) //ID=0 for unknown book name,+ve number for old book
+									mode=0; //switches to modify mode
 							}
 							break;
 						case 2:
@@ -233,8 +233,8 @@ void Book::add(int mode=1)
 								author[0]=0;
 							else
 							{
-								char * temp=partsearch(1,c);
-								if(temp!=NULL)
+								char * temp=partsearch(1,c); //returns the string with author name
+								if(temp!=NULL) //partsearch returns null pointer if user presses Esc
 								{
 									strcpy(author,temp);
 								}
@@ -255,21 +255,21 @@ void Book::add(int mode=1)
 							}
 							break;
 						case 6:
-							if(isdigit(c)&&quantity<=99)
+							if(isdigit(c)&&quantity<99)
 								quantity=10*quantity+c-48;
-							if(c==8)  //backspace
+							if(c=='\b')
 								quantity/=10;
 							break;
 						case 7:
 							if(isdigit(c)&&price<6500)
 								price=10*price+c-48;
-							if(c==8)
+							if(c=='\b')
 								price/=10;
 					}
 			}
 	}
 }
-void Book::show()
+void Book::show() //shows the data in the object for search
 {
 	cout<<endl;
 	cout<<"     #"<<ID<<space(49-intlen(ID)-intlen(quantity))<<"Availibility: "<<quantity<<" items"<<endl;
@@ -286,10 +286,10 @@ void Book::show()
 class Transaction
 {
 	long ID;
-	buy list[5];
-	int price[5];
+	buy list[5]; //the cart gets copied here on transaction
+	int price[5]; //stores price because that might be edited later
 	double total;
-	char date[9];
+	char date[9]; //picks from computer's date on transaction
 	public:
 	char * retdate()
 	{
@@ -462,7 +462,7 @@ void transinfo(stack s)
 void passout(int len,int code=0)
 {	 //code=0 for no error, 1 for incorrect pass, 2 for invalid char
 	clrscr();
-	gotoxy(1,12);
+	cout<<"\n\n\n\n\n\n\n\n\n\n\n";
 	if(code==1)
 		print("Incorrect password, try again");
 	else if(code==2)
@@ -477,14 +477,14 @@ void passout(int len,int code=0)
 		print("Re-enter new password");
 	else if(code==7)
 		print("Passwords do not match, please re-enter");
-	cout<<endl<<setw((80+strlen("Enter password (Esc to quit) : ")-len)/2)<<"Enter password (Esc to quit) : ";
+	cout<<endl<<setw((80+strlen("Enter password (Esc to cancel) : ")-len)/2)<<"Enter password (esc to quit) : ";
 	for(int i=len;i>0;i--)
 	{
 		cout<<"*";
 	}
 }
 int pass(int code=1,int mode=0)
-{         //mode=1 for change password, 0 for enter password
+{
 	clrscr();
 	char c,pass[20]="",corr[20];
 	passout(0,code);
@@ -556,12 +556,12 @@ void bookmenu(Book b)
 				getch();
 				break;
 			case '1':
-				for(int k=0,found=0;k<N&&found==0;k++)
+				for(int k=0,l=0;k<N&&l==0;k++)
 					if(b.retID()==cart[k].ID)
-						found=1;
+						l=1;
 				clrscr();
 				gotoxy(1,13);
-				if(!found&&N<5&&b.retquan())
+				if(!l&&N<5&&b.retquan())
 				{
 					cart[N].ID=b.retID();
 					cart[N].quantity=1;
@@ -588,10 +588,10 @@ void bookmenu(Book b)
 				b.add(0);
 				if(b.retID()!=-1)
 				{
-					for(int k=0,found=0;k<N&&!found;k++)
+					for(int k=0,l=0;k<N&&!l;k++)
 						if(b.retID()==cart[k].ID)
-							found=1;
-					if(found==0||(found==1&&cart[k-1].quantity<=b.retquan()))
+							l=1;
+					if(l==0||(l==1&&cart[k-1].quantity<=b.retquan()))
 					{
 						fstream fout;
 						fout.open("booklist.dat",ios::binary|ios::out|ios::in);
@@ -635,23 +635,32 @@ void bookmenu(Book b)
 		}
 	}
 }
-void searchscr(int type,int mode=1,Book * b=NULL,char x=0)//type=1 for name,2 for auth,3 for tag
+void searchscr(int type,int mode=1,Book * b=NULL,char x=0)
 {   //mode=1 for search book, 0 for search trans,2 for add book
 	clrscr();
-	int start=0,range=0,select=0;//start=no of results to ignore,range=no of results to display,select=which result it selected
-	char c,search[50]=" ";
+	int start=0,range=0,select=0;
+	char c,search[30]=" ";
 	search[0]=x;
 	Book result[4];
+	clrscr();
 	cout<<'\n';
 	print(" Search:")<<endl;
 	print(search)<<endl;
 	ifstream fin;
 	fin.open("booklist.dat",ios::binary);
-	int j=0; //no of results found
+	int j=0;
 	while(j<4&&fin.read((char *)&result[j],sizeof(result[j])))
 	{
-		if(result[j].retquan()!=-1)
-			j++;
+		if(mode==2)
+		{
+			if(result[j>start?(j-start):0].retquan()!=-1&&(strstr((type==1?result[j>start?(j-start):0].retname():result[j>start?(j-start):0].retauth()),search)!=NULL))
+				j++;
+		}
+		else
+		{
+			if(result[j%4].retquan()!=-1)
+				j++;
+		}
 	}
 	fin.close();
 	range=j;
@@ -659,7 +668,7 @@ void searchscr(int type,int mode=1,Book * b=NULL,char x=0)//type=1 for name,2 fo
 		result[i].show();
 	gotoxy(1,25);
 	print("Arrow keys and enter key to navigate and select search results");
-	for(i=(x?1:0);;i<50?i++:(i=50))
+	for(i=(mode==2?1:0);;i<50?i++:(i=50))
 	{
 		c=getch();
 		switch(c)
@@ -695,7 +704,8 @@ void searchscr(int type,int mode=1,Book * b=NULL,char x=0)//type=1 for name,2 fo
 				start=0;
 				if(i!=0)
 				{
-					search[--i]='\0';
+					search[i-1]='\0';
+					i--;
 				}
 				i--;
 				break;
@@ -868,6 +878,7 @@ void searchmenu()
 		clrscr();
 		cout<<"\n\n\n\n";
 		print("Search")<<"\n\n\n\n\n";
+	  //	print("Press 0              to search by ID")<<"\n\n";
 		print("Press 1            to search by name")<<"\n\n";
 		print("Press 2          to search by author")<<"\n\n";
 		print("Press 3             to search by tag")<<"\n\n";
@@ -1250,7 +1261,7 @@ int menu()
 			fout.open("booklist.dat",ios::binary|ios::in|ios::out);
 			Book b;
 			b.add();
-			if(!b.retID())
+			if(b.retID()==0)
 			{
 				fout.seekp(0,ios::end);
 				b.assign(fout.tellp()/sizeof(b)+1);
@@ -1304,12 +1315,12 @@ void main()
 	else if(x==-1)
 		exit(0);
 	clrscr();
-	gotoxy(1,13);
+	cout<<"\n\n\n\n\n\n\n\n\n\n\n\n";
 	print("Successfully logged in");
 	delay(700);
 	while(menu());
 	clrscr();
-	gotoxy(1,13);
+	cout<<"\n\n\n\n\n\n\n\n\n\n\n\n";
 	print("Successfully logged out");
 	delay(700);
 }
