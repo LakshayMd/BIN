@@ -543,7 +543,7 @@ void bookmenu(Book b)
 		b.show();
 		cout<<"\n\n";
 		print("Perform an action")<<"\n\n";
-		print("Press 1           to add to cart")<<"\n\n";
+		print("Press 1       to add to buy list")<<"\n\n";
 		print("Press 2                  to edit")<<"\n\n";
 		print("Press 3                to delete")<<"\n\n";
 		print("Press Esc             to go back")<<"\n\n";
@@ -566,7 +566,7 @@ void bookmenu(Book b)
 					cart[N].ID=b.retID();
 					cart[N].quantity=1;
 					N++;
-					print("Book added to cart. To remove or change quantity, go to cart menu.");
+					print("Book added to buy list. You remove or change quantity in the buy list menu.");
 					if(!getch())
 						getch();
 				}
@@ -574,12 +574,12 @@ void bookmenu(Book b)
 				{
 					if(N==5)
 					{
-						print("Error: cart is already full");
+						print("Error: buy list is can't have more than 5 distinct items");
 					}
 					else if(!b.retquan())
 						print("Error: this book is out of stock");
 					else
-						print("Error: this book is already in the cart");
+						print("Error: this book is already in the buy list");
 					if(!getch())
 						getch();
 				}
@@ -608,7 +608,7 @@ void bookmenu(Book b)
 					{
 						clrscr();
 						gotoxy(1,13);
-						print("Error: Cannot edit quantity to lower than that in cart");
+						print("Error: Cannot edit quantity to lower than that in buy list");
 						if(!getch())
 							getch();
 					}
@@ -951,7 +951,7 @@ void cartmenu()
 			gotoxy(1,21);
 			print("Arrow keys to select")<<endl;
 			print("+ and - to increaase/decrease quantity of selected item")<<endl;
-			print("Delete key to remove item from cart")<<endl;
+			print("Delete key to remove item from the list")<<endl;
 			print("Press Enter twice to proceed with transaction");
 			if(select)
 			{
@@ -995,7 +995,7 @@ void cartmenu()
 						Transaction t;
 						t.add();
 						fstream f;
-						f.open("transactions.dat",ios::binary|ios::out|ios::in);
+						f.open("transact.dat",ios::binary|ios::out|ios::in);
 						f.seekg(0,ios::end);
 						t.assign(f.tellg()/sizeof(t)+1);
 						f.write((char *)&t,sizeof(t));
@@ -1178,10 +1178,6 @@ void datesearch()
 					}
 					fin.close();
 				}
-				else
-				{
-					cout<<"y tho ;-;";getch();
-				}
 				break;
 			case 27:
 				return;
@@ -1195,6 +1191,48 @@ void datesearch()
 		}
 	}
 }
+void IDlookup()
+{
+	while(1)
+	{
+		long ID=0;
+		char c=0;
+		while(c!='\r')
+		{
+			clrscr();
+			gotoxy(1,12);
+			print("Enter the ID of the transaction you want to see")<<endl;
+			prINT(ID);
+			c=getch();
+			if(!c)
+				getch();
+			else if(c==27)
+				return;
+			else if(isdigit(c)&&ID<10000000)
+				ID=ID*10+c-48;
+			else if(c=='\b')
+				ID/=10;
+		}
+		Transaction t;
+		ifstream fin("transact.dat",ios::binary);
+		fin.seekg(sizeof(t)*(ID-1));
+		if(fin.read((char *)&t,sizeof(t)))
+		{
+			clrscr();
+			t.show();
+			if(!getch())
+				getch();
+		}
+		else
+		{
+			clrscr();
+			gotoxy(1,13);
+			print("No such transaction exists");
+			if(!getch())
+				getch();
+		}
+	}
+}
 void transmenu()
 {
 	while(1)
@@ -1202,6 +1240,7 @@ void transmenu()
 		clrscr();
 		cout<<"\n\n\n\n\n";
 		print("View Transactions")<<"\n\n\n";
+		print("Press 0           to see transactions by ID")<<"\n\n";
 		print("Press 1         to see transactions by book")<<"\n\n";
 		print("Press 2       to see transactions by author")<<"\n\n";
 		print("Press 3          to see transactions by tag")<<"\n\n";
@@ -1213,6 +1252,9 @@ void transmenu()
 				return;
 			case 0:
 				getch();
+				break;
+			case '0':
+				IDlookup();
 				break;
 			case '1':
 				searchscr(1,0);
@@ -1235,7 +1277,7 @@ int menu()
 	print("XD Book Shop")<<"\n\n\n";
 	print("Press 1         to add book to stock")<<"\n\n";
 	print("Press 2         to search for a book")<<"\n\n";
-	print("Press 3               to manage cart")<<"\n\n";
+	print("Press 3           to manage buy list")<<"\n\n";
 	print("Press 4         to view transactions")<<"\n\n";
 	print("Press 5           to change password")<<"\n\n";
 	print("Press Esc        to log out and quit")<<"\n\n";
